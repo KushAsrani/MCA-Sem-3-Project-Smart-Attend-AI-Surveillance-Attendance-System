@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    
+    <!-- 1. PROFILE HEADER -->
+    <div class="max-w-7xl mx-auto bg-white rounded-3xl shadow-sm border border-slate-100 p-8 mb-10 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+        <!-- Background Decoration -->
+        <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-overlay filter blur-3xl opacity-10 pointer-events-none"></div>
+
+        <!-- Avatar (Initials) -->
+        <div class="w-24 h-24 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-lg border-4 border-white z-10">
+            {{ student.name[0] }}
+        </div>
+        
+        <!-- Info -->
+        <div class="text-center md:text-left z-10 flex-1">
+            <h1 class="text-3xl font-bold text-slate-800">{{ student.name }}</h1>
+            <div class="flex flex-wrap justify-center md:justify-start gap-4 mt-3 text-sm text-slate-500 font-medium">
+                <span class="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    <i class="fa-solid fa-id-card text-indigo-500"></i> {{ student.roll_no }}
+                </span>
+                <span class="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    <i class="fa-solid fa-graduation-cap text-purple-500"></i> {{ student.course }}
+                </span>
+                <span class="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                    <i class="fa-solid fa-envelope text-blue-500"></i> {{ student.email }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. STATISTICS GRID (4 Cards - NOW CLICKABLE) -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        
+        <!-- Overall Attendance (Link to Full History) -->
+        <a href="/student_attendance_history" class="block hover:scale-[1.02] transition-transform duration-200">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden group h-full">
+                <p class="text-slate-500 font-bold text-xs uppercase tracking-wide mb-1">Overall Attendance</p>
+                <div class="flex items-end gap-2">
+                    <h2 class="text-5xl font-bold {{ 'text-green-600' if percentage >= 75 else 'text-red-600' }}">{{ percentage }}%</h2>
+                </div>
+                <p class="text-xs text-slate-400 mt-2">Target: 75%</p>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 h-1.5 rounded-full mt-4 overflow-hidden">
+                    <div class="h-full rounded-full {{ 'bg-green-500' if percentage >= 75 else 'bg-red-500' }}" style="width: {{ percentage }}%"></div>
+                </div>
+            </div>
+        </a>
+
+        <!-- Present Count (Link to Full History) -->
+        <a href="/student_attendance_history" class="block hover:scale-[1.02] transition-transform duration-200">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between h-full">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-slate-500 font-bold text-xs uppercase tracking-wide">Present</p>
+                        <h3 class="text-3xl font-bold text-green-600 mt-1">{{ present_count }} <span class="text-slate-300 text-lg">/ {{ total_lectures }}</span></h3>
+                    </div>
+                    <div class="w-10 h-10 bg-green-50 text-green-600 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-check-double"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-green-600 font-medium mt-4">View Full Log <i class="fa-solid fa-arrow-right ml-1"></i></p>
+            </div>
+        </a>
+
+        <!-- Absent Count (Link to Full History - Filtered logic can be added later) -->
+        <a href="/student_attendance_history" class="block hover:scale-[1.02] transition-transform duration-200">
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between h-full">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-slate-500 font-bold text-xs uppercase tracking-wide">Total Absent</p>
+                        <h3 class="text-3xl font-bold text-slate-700 mt-1">{{ absent_count }}</h3>
+                    </div>
+                    <div class="w-10 h-10 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-user-xmark"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-400 font-medium mt-4">Includes Sick Leaves & Bunks</p>
+            </div>
+        </a>
+
+        <!-- Caught Bunking (Red Alert - Link to Bunk Details) -->
+        <a href="/student_bunk_history" class="block hover:scale-[1.02] transition-transform duration-200">
+            <div class="bg-gradient-to-br from-red-50 to-white p-6 rounded-2xl shadow-sm border border-red-100 flex flex-col justify-between relative overflow-hidden h-full">
+                <div class="absolute right-0 top-0 w-20 h-20 bg-red-500 rounded-bl-full opacity-5"></div>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="text-red-600 font-bold text-xs uppercase tracking-wide">Caught Bunking</p>
+                        <h3 class="text-4xl font-bold text-red-700 mt-1">{{ bunk_count }}</h3>
+                    </div>
+                    <div class="w-10 h-10 bg-white text-red-500 rounded-lg flex items-center justify-center shadow-sm border border-red-50">
+                        <i class="fa-solid fa-person-walking-arrow-right"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-red-500 font-bold mt-4 flex items-center gap-1">
+                    View Proofs <i class="fa-solid fa-arrow-right ml-1"></i>
+                </p>
+            </div>
+        </a>
+    </div>
+
+    <!-- 3. MAIN CONTENT SPLIT -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT: Attendance History Table -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden h-full">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 class="font-bold text-lg text-slate-800">Recent Activity</h3>
+                    <a href="/student_attendance_history" class="text-xs font-bold bg-slate-100 text-slate-600 px-3 py-1 rounded-full hover:bg-slate-200 transition-colors">View All</a>
+                </div>
+                
+                {% if attendance_records %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+                            <tr>
+                                <th class="p-4">Date</th>
+                                <th class="p-4">Subject</th>
+                                <th class="p-4">Time</th>
+                                <th class="p-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-600">
+                            {% for record in attendance_records[:5] %} <!-- Show only recent 5 here -->
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="p-4 font-mono text-xs font-bold text-slate-500">{{ record.date }}</td>
+                                <td class="p-4 font-bold text-slate-800">{{ record.subject }}</td>
+                                <td class="p-4 text-xs">{{ record.time }}</td>
+                                <td class="p-4">
+                                    {% if record.status == 'Present' %}
+                                        <span class="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-green-100">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-green-500"></div> Present
+                                        </span>
+                                    {% elif record.status == 'Late' %}
+                                        <span class="inline-flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-yellow-100">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> Late
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 px-2.5 py-1 rounded-lg text-xs font-bold border border-red-100">
+                                            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div> Absent
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                    <div class="p-12 text-center text-slate-400">
+                        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fa-regular fa-folder-open text-3xl"></i>
+                        </div>
+                        <p class="font-medium">No attendance records found.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Bunking Evidence Preview -->
+        <div class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 h-full flex flex-col">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <h3 class="font-bold text-lg text-slate-800">Surveillance</h3>
+                    </div>
+                    <a href="/student_bunk_history" class="text-xs text-indigo-600 font-bold hover:underline">View All</a>
+                </div>
+                
+                {% if bunks %}
+                    <div class="space-y-4 overflow-y-auto custom-scrollbar pr-2 flex-1">
+                        {% for bunk in bunks[:3] %} <!-- Show only recent 3 -->
+                        <a href="/student_bunk_history" class="block">
+                            <div class="p-3 rounded-xl border border-red-100 bg-red-50/30 flex gap-3 items-start group hover:bg-red-50 transition-colors">
+                                <!-- Proof Image -->
+                                <div class="w-20 h-20 rounded-lg overflow-hidden border border-red-200 shrink-0 bg-white relative">
+                                    <img src="{{ bunk.proof_image }}" class="w-full h-full object-cover">
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <p class="text-[10px] text-red-600 font-bold mb-1 uppercase tracking-wider bg-red-100 inline-block px-1.5 rounded">Bunk Detected</p>
+                                    </div>
+                                    <p class="text-sm font-bold text-slate-800">{{ bunk.date }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-1">
+                                        <i class="fa-regular fa-clock"></i> {{ bunk.time }}
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-10 bg-green-50 rounded-xl border border-green-100 flex-1 flex flex-col justify-center items-center">
+                        <div class="w-14 h-14 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-3 animate-bounce-slow">
+                            <i class="fa-solid fa-shield-halved text-2xl"></i>
+                        </div>
+                        <p class="text-green-800 font-bold">Clean Record!</p>
+                        <p class="text-green-600 text-xs mt-1">No bunking incidents detected.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* Custom Scrollbar for Proofs List */
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    @keyframes bounce-slow {
+        0%, 100% { transform: translateY(-5%); }
+        50% { transform: translateY(5%); }
+    }
+    .animate-bounce-slow { animation: bounce-slow 2s infinite; }
+</style>
+{% endblock %}

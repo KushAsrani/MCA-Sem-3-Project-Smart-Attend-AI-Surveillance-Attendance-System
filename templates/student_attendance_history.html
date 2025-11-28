@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen py-10 px-4 sm:px-6 lg:px-8 bg-slate-50">
+    
+    <div class="max-w-6xl mx-auto">
+        
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800">Attendance History</h1>
+                <p class="text-slate-500 mt-1">Detailed log of all your lectures.</p>
+            </div>
+            <a href="/student_dashboard" class="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-arrow-left"></i> Dashboard
+            </a>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            
+            <!-- Filters / Search (Visual only for now) -->
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div class="relative">
+                    <input type="text" placeholder="Search subject..." class="pl-10 pr-4 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:border-indigo-500 w-64">
+                    <i class="fa-solid fa-search absolute left-3.5 top-3 text-slate-400 text-xs"></i>
+                </div>
+                <button class="px-4 py-2 bg-indigo-50 text-indigo-600 font-bold text-xs rounded-lg hover:bg-indigo-100 transition-colors">
+                    <i class="fa-solid fa-download mr-2"></i> Export CSV
+                </button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 text-slate-600 font-bold uppercase text-xs">
+                        <tr>
+                            <th class="p-4">Date</th>
+                            <th class="p-4">Time</th>
+                            <th class="p-4">Subject</th>
+                            <th class="p-4">Course</th>
+                            <th class="p-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
+                        {% for record in records %}
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-4 font-mono font-bold">{{ record.date }}</td>
+                            <td class="p-4 text-slate-500">{{ record.time }}</td>
+                            <td class="p-4 font-bold text-slate-900">{{ record.subject }}</td>
+                            <td class="p-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs font-bold">{{ record.course }}</span></td>
+                            <td class="p-4">
+                                {% if record.status == 'Present' %}
+                                    <span class="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">
+                                        <i class="fa-solid fa-check"></i> Present
+                                    </span>
+                                {% elif record.status == 'Late' %}
+                                    <span class="inline-flex items-center gap-1.5 bg-yellow-50 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">
+                                        <i class="fa-regular fa-clock"></i> Late
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center gap-1.5 bg-red-50 text-red-700 px-3 py-1 rounded-full text-xs font-bold border border-red-200">
+                                        <i class="fa-solid fa-xmark"></i> Absent
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination (Static for UI) -->
+            <div class="p-4 border-t border-slate-100 flex justify-between items-center bg-slate-50/30 text-xs text-slate-500">
+                <p>Showing all records</p>
+                <div class="flex gap-2">
+                    <button disabled class="px-3 py-1 bg-white border border-slate-200 rounded opacity-50">Prev</button>
+                    <button disabled class="px-3 py-1 bg-white border border-slate-200 rounded opacity-50">Next</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Attendance System</title>
+    
+    <!-- Tailwind CSS for Modern Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons (FontAwesome) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        /* Glassmorphism Navigation */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        /* Gradient Text Effect */
+        .gradient-text {
+            background: linear-gradient(to right, #2563eb, #9333ea);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen text-slate-800">
+
+    <!-- Navbar -->
+    <nav class="glass-nav fixed w-full z-50 top-0 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo / Brand -->
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.location.href='/'">
+                    <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                        <i class="fa-solid fa-user-check text-lg"></i>
+                    </div>
+                    <span class="font-bold text-xl tracking-tight">Smart<span class="text-blue-600">Attend</span></span>
+                </div>
+
+                <!-- Desktop Menu -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Home</a>
+                    
+                    <!-- Smart Dashboard Link Logic -->
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.role == 'student' %}
+                            <a href="/student_dashboard" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
+                        {% elif current_user.role == 'teacher' %}
+                            <a href="/teacher_dashboard" class="text-slate-600 hover:text-blue-600 font-medium transition-colors">Dashboard</a>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <!-- LOGIN / LOGOUT LOGIC -->
+                    {% if current_user.is_authenticated %}
+                        <!-- Logout Button (Red) -->
+                        <a href="/logout" class="group relative px-6 py-2.5 bg-red-50 text-red-600 font-semibold rounded-full border border-red-200 hover:bg-red-600 hover:text-white transition-all duration-300 shadow-sm">
+                            <span class="relative z-10"><i class="fa-solid fa-right-from-bracket mr-2"></i>Logout</span>
+                        </a>
+                    {% else %}
+                        <!-- Login Button (Blue) -->
+                        <a href="/login" class="group relative px-6 py-2.5 bg-slate-900 text-white font-semibold rounded-full shadow-lg shadow-slate-900/20 hover:bg-blue-600 hover:shadow-blue-600/30 transition-all duration-300 overflow-hidden">
+                            <span class="relative z-10">Login</span>
+                            <div class="absolute inset-0 h-full w-full bg-gradient-to-r from-blue-600 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-btn" class="text-slate-600 hover:text-blue-600 focus:outline-none">
+                        <i class="fa-solid fa-bars text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu (Hidden by default) -->
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-slate-100 absolute w-full shadow-xl">
+            <div class="px-4 pt-2 pb-6 space-y-2">
+                <a href="/" class="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Home</a>
+                
+                <!-- Smart Dashboard Link Mobile -->
+                {% if current_user.is_authenticated %}
+                    {% if current_user.role == 'student' %}
+                        <a href="/student_dashboard" class="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Dashboard</a>
+                    {% elif current_user.role == 'teacher' %}
+                        <a href="/teacher_dashboard" class="block px-3 py-3 rounded-md text-base font-medium text-slate-700 hover:text-blue-600 hover:bg-slate-50">Dashboard</a>
+                    {% endif %}
+                    
+                    <!-- Logout Mobile -->
+                    <a href="/logout" class="block mt-4 text-center w-full px-4 py-3 bg-red-50 text-red-600 font-bold rounded-lg border border-red-200">
+                        <i class="fa-solid fa-right-from-bracket mr-2"></i> Logout
+                    </a>
+                {% else %}
+                    <!-- Login Mobile -->
+                    <a href="/login" class="block mt-4 text-center w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md">Login Now</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Wrapper -->
+    <main class="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        
+        <!-- JINJA BLOCK START -->
+        {% block content %}
+        
+            <!-- Default Landing Page Content -->
+            <div class="text-center py-16 lg:py-24">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold mb-6 border border-blue-100">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                    </span>
+                    AI-Powered Face Recognition
+                </div>
+                
+                <!-- Headline -->
+                <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+                    Attendance Made <span class="gradient-text">Smarter.</span>
+                </h1>
+                
+                <!-- Subheadline -->
+                <p class="text-lg text-slate-500 max-w-2xl mx-auto mb-10 leading-relaxed">
+                    Say goodbye to manual registers. Our system uses advanced computer vision to mark attendance securely, accurately, and in real-time.
+                </p>
+
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    {% if current_user.is_authenticated %}
+                        <!-- Agar login hai to dashboard par bhejo -->
+                        {% if current_user.role == 'teacher' %}
+                            <a href="/teacher_dashboard" class="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:-translate-y-1 hover:bg-blue-700 transition-all duration-300">
+                                Go to Dashboard
+                            </a>
+                        {% else %}
+                            <a href="/student_dashboard" class="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:-translate-y-1 hover:bg-blue-700 transition-all duration-300">
+                                Go to Dashboard
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <!-- Agar login nahi hai to login par bhejo -->
+                        <a href="/login" class="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 hover:-translate-y-1 hover:bg-blue-700 transition-all duration-300">
+                            Get Started
+                        </a>
+                    {% endif %}
+                    
+                    <a href="#" class="px-8 py-4 bg-white text-slate-700 border border-slate-200 font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all duration-300">
+                        View Demo
+                    </a>
+                </div>
+
+                <!-- Feature Grid -->
+                <div class="grid md:grid-cols-3 gap-8 mt-24 text-left">
+                    <!-- Feature 1 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-blue-100 transition-all duration-300 group">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Face Scan</h3>
+                        <p class="text-slate-500">Contactless attendance using high-precision face recognition algorithms.</p>
+                    </div>
+
+                    <!-- Feature 2 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-purple-100 transition-all duration-300 group">
+                        <div class="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-chart-pie"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Real-time Analytics</h3>
+                        <p class="text-slate-500">View attendance graphs, late comers, and daily reports instantly.</p>
+                    </div>
+
+                    <!-- Feature 3 -->
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-green-100 transition-all duration-300 group">
+                        <div class="w-12 h-12 bg-green-100 text-green-600 rounded-lg flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h3 class="text-xl font-bold mb-2">Secure & Private</h3>
+                        <p class="text-slate-500">Encrypted data storage ensures student and employee privacy is never compromised.</p>
+                    </div>
+                </div>
+            </div>
+
+        {% endblock %}
+        <!-- JINJA BLOCK END -->
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
+            <div class="md:flex md:justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <span class="font-bold text-xl text-slate-800">Smart<span class="text-blue-600">Attend</span></span>
+                    <p class="text-slate-500 text-sm mt-2">Automating attendance for a smarter future.</p>
+                </div>
+                <div class="flex space-x-6 text-slate-400">
+                    <a href="#" class="hover:text-blue-600 transition-colors"><i class="fa-brands fa-github text-xl"></i></a>
+                    <a href="#" class="hover:text-blue-400 transition-colors"><i class="fa-brands fa-twitter text-xl"></i></a>
+                    <a href="#" class="hover:text-blue-700 transition-colors"><i class="fa-brands fa-linkedin text-xl"></i></a>
+                </div>
+            </div>
+            <div class="mt-8 border-t border-slate-100 pt-8 text-center md:text-left">
+                <p class="text-sm text-slate-400">&copy; 2025 Smart Attendance System. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Mobile Menu Script -->
+    <script>
+        const btn = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+
+        btn.addEventListener('click', () => {
+            menu.classList.toggle('hidden');
+        });
+    </script>
+
+</body>
+</html>

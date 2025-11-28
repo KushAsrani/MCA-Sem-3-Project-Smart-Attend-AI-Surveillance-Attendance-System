@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h2 class="text-3xl font-bold text-slate-800">Teacher Dashboard</h2>
+            <p class="text-slate-500">Welcome back, {{ user.name }} 👋</p>
+        </div>
+        
+        <div class="flex gap-3">
+            <a href="/schedule_lecture" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-indigo-500/30 hover:bg-indigo-700 transition-all flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Schedule Lecture
+            </a>
+        </div>
+    </div>
+
+    <!-- 🚨 LIVE ALERT SECTION (Initially Hidden) -->
+    <div id="alert-container" class="hidden mb-8 bg-red-50 border border-red-200 rounded-2xl p-6 animation-pulse">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-red-700 font-bold text-lg flex items-center gap-2">
+                <i class="fa-solid fa-bell fa-shake"></i> Canteen Surveillance Alert!
+            </h3>
+            <span class="bg-red-200 text-red-800 text-xs px-2 py-1 rounded-full font-bold">Live Detection</span>
+        </div>
+        <!-- Alerts Grid -->
+        <div id="alert-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Stats & History -->
+        <div class="lg:col-span-2 space-y-6">
+            
+            <!-- Stats Row -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <p class="text-slate-500 text-sm">Total Lectures</p>
+                    <h3 class="text-3xl font-bold text-slate-800">{{ schedules|length + history|length }}</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <p class="text-slate-500 text-sm">Active Students</p>
+                    <h3 class="text-3xl font-bold text-green-600">120</h3>
+                </div>
+            </div>
+            
+            <!-- Lecture History Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-lg text-slate-800">Lecture History</h3>
+                    <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded">Past Lectures</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm text-slate-600">
+                        <thead class="bg-slate-100 text-xs uppercase font-bold">
+                            <tr>
+                                <th class="p-4">Date</th>
+                                <th class="p-4">Subject</th>
+                                <th class="p-4">Class</th>
+                                <th class="p-4">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% if history %}
+                                {% for lec in history %}
+                                <tr class="hover:bg-slate-50">
+                                    <td class="p-4 font-mono text-slate-500">{{ lec.date }}</td>
+                                    <td class="p-4 font-bold text-slate-800">{{ lec.subject }}</td>
+                                    <td class="p-4"><span class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs font-bold">{{ lec.course }}</span></td>
+                                    <td class="p-4">{{ lec.start_time }}</td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr><td colspan="4" class="p-6 text-center text-slate-400">No past lectures found.</td></tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Today's Schedule & Live Status -->
+        <div class="space-y-8">
+            
+            <!-- LIVE CLASS STATUS CARD (Hidden by Default) -->
+            <div id="live-status-card" class="hidden bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg sticky top-24 z-20">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="bg-white/20 px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
+                        <span class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> LIVE
+                    </span>
+                    <button onclick="stopLecture()" class="bg-red-500/20 hover:bg-red-500 text-white px-3 py-1 rounded-lg text-xs font-bold transition-colors border border-red-400/30">
+                        <i class="fa-solid fa-power-off mr-1"></i> End
+                    </button>
+                </div>
+                <h3 class="text-2xl font-bold mb-1">Class in Progress</h3>
+                <p class="text-green-100 text-sm mb-4">Surveillance Active</p>
+                <div class="text-4xl font-mono font-bold bg-black/10 rounded-lg p-2 text-center" id="lecture-timer">
+                    00:00:00
+                </div>
+            </div>
+
+            <!-- SCHEDULE LIST -->
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-lg text-slate-800">Upcoming Schedule</h3>
+                    <span class="text-xs font-bold bg-indigo-50 text-indigo-600 px-2 py-1 rounded">Active</span>
+                </div>
+                
+                {% if schedules %}
+                    <div class="space-y-4">
+                        {% for lec in schedules %}
+                        <!-- Logic to Check if Expired -->
+                        {% set is_expired = current_time > lec.end_time %}
+                        
+                        <div class="p-4 rounded-xl border relative overflow-hidden transition-shadow group {{ 'bg-gray-50 border-gray-200 opacity-75' if is_expired else 'bg-white border-slate-200 hover:shadow-md' }}">
+                            <div class="absolute left-0 top-0 bottom-0 w-1 {{ 'bg-gray-400' if is_expired else 'bg-indigo-500 group-hover:bg-indigo-600' }}"></div>
+                            
+                            <!-- Edit/Delete Controls -->
+                            {% if not is_expired %}
+                            <div class="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href="/schedule_lecture?id={{ lec.id }}" class="text-slate-400 hover:text-blue-600" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <button onclick="deleteLecture('{{ lec.id }}')" class="text-slate-400 hover:text-red-600" title="Delete">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            {% endif %}
+
+                            <div class="pl-3">
+                                <p class="text-xs font-bold mb-1 {{ 'text-gray-500' if is_expired else 'text-indigo-600' }}">
+                                    {{ lec.start_time }} - {{ lec.end_time }}
+                                </p>
+                                <h4 class="font-bold text-slate-800 text-md">{{ lec.subject }}</h4>
+                                <div class="flex flex-wrap gap-2 mt-1 text-xs text-slate-500">
+                                    <span><i class="fa-solid fa-users"></i> {{ lec.course }}</span>
+                                    <span><i class="fa-solid fa-door-open"></i> {{ lec.classroom }}</span>
+                                </div>
+                                
+                                <!-- ACTION BUTTONS -->
+                                <div class="mt-4 pt-3 border-t border-slate-100 flex gap-2">
+                                    {% if is_expired %}
+                                        <button disabled class="flex-1 py-2 bg-gray-200 text-gray-500 text-xs font-bold rounded-lg cursor-not-allowed">
+                                            Ended
+                                        </button>
+                                    {% else %}
+                                        <button onclick="startLecture('{{ lec.course }}', '{{ lec.subject }}', '{{ lec.start_time }}', '{{ lec.end_time }}')" class="flex-1 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center justify-center gap-1">
+                                            <i class="fa-solid fa-play"></i> Start
+                                        </button>
+                                        <a href="/take_attendance?course={{ lec.course }}&subject={{ lec.subject }}" class="flex-1 block text-center py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold rounded-lg transition-colors">
+                                            Attendance
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-10 text-slate-400">
+                        <i class="fa-regular fa-calendar-xmark text-3xl mb-2"></i>
+                        <p class="text-sm">No upcoming lectures.</p>
+                        <a href="/schedule_lecture" class="text-indigo-600 text-xs font-bold mt-1 inline-block hover:underline">Schedule Now</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript Logic -->
+<script>
+    let alertInterval, timerInterval;
+
+    // --- RESTORE STATE ON PAGE LOAD (Fixed Syntax Error) ---
+    window.onload = function() {
+        // Use quotes to handle variable safely as a string
+        const isLiveStatus = "{{ is_live }}";
+        
+        // Check for Python 'True' or JS 'true'
+        if(isLiveStatus === "True" || isLiveStatus === "true") {
+            document.getElementById('live-status-card').classList.remove('hidden');
+            startTimer();
+            alertInterval = setInterval(checkAlerts, 3000);
+            console.log("Lecture is LIVE (Restored from state)");
+        }
+    };
+
+    // --- 1. DELETE LECTURE ---
+    async function deleteLecture(id) {
+        if(!confirm("Are you sure you want to DELETE this lecture?")) return;
+        try {
+            const response = await fetch(`/delete_schedule/${id}`, { method: 'POST' });
+            const result = await response.json();
+            if(result.status === 'success') location.reload();
+            else alert("Error: " + result.msg);
+        } catch(e) { alert("Server Error"); }
+    }
+
+    // --- 2. START LECTURE ---
+    async function startLecture(course, subject, start, end) {
+        try {
+            const response = await fetch('/start_lecture', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ course: course, subject: subject, start_time: start, end_time: end })
+            });
+            const result = await response.json();
+
+            if(result.status === 'success') {
+                alert("Lecture Started! Surveillance Window Open.");
+                location.reload(); // Reload to update UI based on backend state
+            } else {
+                alert(result.msg);
+            }
+        } catch(e) { alert("Server Error"); }
+    }
+
+    // --- 3. STOP LECTURE ---
+    async function stopLecture() {
+        if(!confirm("End Lecture & Auto-Mark Attendance?")) return;
+        
+        await fetch('/stop_lecture', { method: 'POST' });
+        
+        document.getElementById('live-status-card').classList.add('hidden');
+        document.getElementById('alert-container').classList.add('hidden');
+        clearInterval(alertInterval);
+        clearInterval(timerInterval);
+        alert("Lecture Ended Successfully.");
+        location.reload();
+    }
+
+    // --- 4. CHECK ALERTS (Polling) ---
+    async function checkAlerts() {
+        const res = await fetch('/get_alerts');
+        const alerts = await res.json();
+        const box = document.getElementById('alert-container');
+        const grid = document.getElementById('alert-grid');
+        
+        if(alerts.length > 0) {
+            box.classList.remove('hidden');
+            grid.innerHTML = alerts.map(a => `
+                <div class="bg-white p-3 rounded-lg shadow border-l-4 border-red-500 flex gap-3 animate-pulse">
+                    <img src="${a.image}" class="w-16 h-16 rounded object-cover border border-slate-200">
+                    <div class="flex-1">
+                        <h4 class="font-bold text-slate-800 text-sm">${a.roll}</h4>
+                        <p class="text-xs text-slate-500">Time: ${a.time}</p>
+                        <div class="mt-2 flex gap-2">
+                            <button onclick="handle('${a.roll}', 'mark')" class="bg-red-600 text-white px-2 py-1 text-xs rounded font-bold">Mark Bunk</button>
+                            <button onclick="handle('${a.roll}', 'ignore')" class="bg-gray-200 text-xs px-2 py-1 rounded font-bold">Ignore</button>
+                        </div>
+                    </div>
+                </div>`).join('');
+        } else {
+            box.classList.add('hidden');
+        }
+    }
+
+    async function handle(roll, action) {
+        await fetch('/action_bunking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roll_no: roll, action: action })
+        });
+        checkAlerts();
+    }
+
+    function startTimer() {
+        let sec = 0;
+        timerInterval = setInterval(() => {
+            sec++;
+            const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+            const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            document.getElementById('lecture-timer').innerText = `${h}:${m}:${s}`;
+        }, 1000);
+    }
+</script>
+{% endblock %}
