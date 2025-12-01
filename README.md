@@ -1,29 +1,22 @@
 # Smart-Attend: AI Surveillance Attendance System
+Revolutionizing campus management with intelligent automation and
+enhanced security.
 
 Smart-Attend is an AI-powered attendance system built for real-time surveillance and automated attendance logging. This project combines face detection, face recognition, and attendance recording to create a practical solution suitable for classrooms, small offices, and controlled access environments.
 
-Key goals:
-- Automatically detect and recognize people from live camera feeds or recorded video.
-- Log attendance with timestamps and optional metadata.
-- Provide tools for dataset collection, training, evaluation, and demoing the system.
-
 ---
 
-## Table of Contents
-- [Features](#features)
-- [Project Structure](#project-structure)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Preparing the Dataset](#preparing-the-dataset)
-- [Training a Model](#training-a-model)
-- [Running the Real-time Attendance Demo](#running-the-real-time-attendance-demo)
-- [Usage Examples](#usage-examples)
-- [Output / Attendance Format](#output--attendance-format)
-- [Improving Accuracy](#improving-accuracy)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [License](#license)
-- [Acknowledgements & References](#acknowledgements--references)
+## Objectives
+- **To Automate Attendance Tracking:** To replace manual roll-call methods, which are documented as being time-consuming and burdensome for teachers. The system aims to significantly reduce the time and energy wasted during lecture hours.
+- **To Eliminate Manual Attendance Errors:** Eliminate manual attendance errors and streamline record-keeping through high-accuracy biometric facial recognition.
+- **To Mitigate Proxy Attendance:** To eliminate the "buddy punching" phenomenon where students mark attendance for absent peers—a frequent flaw in manual and simple hardware-based systems (like NFC).
+- **To Imporve Operational Efficiency:** Simplify administrative tasks for faculty and staff, from attendance management to lecture scheduling and conflict resolution.
+- **To Improve Recognition in Uncontrolled Environments:** Unlike earlier systems that struggle with pose variations and poor lighting , this project aims to implement the InsightFace deep learning model to accurately identify students from multiple angles (Multi-Template Matching) without requiring them to stare directly into a camera.
+- **To Implement Active "Bunking" Surveillance:** To extend the system scope beyond passive attendance recording by introducing a real-time surveillance module. This objective focuses on detecting registered students loitering outside classrooms during active lecture slots and alerting faculty instantly.
+- **To Automatically Detect and Recognize People:** Automatically detect and recognize people from live camera feeds or recorded video and streamline record-keeping through high-accuracy biometric facial recognition.
+- **To Enhance Security:** Proactively identify and prevent unauthorized activities, including student bunking, to maintain campus discipline and safety.
+- **To Log Attendance:** Log attendance with timestamps and optional metadata.
+- **To Enhance Data Efficiency:** Provide tools for dataset collection, training, evaluation, and demoing the system. To optimize storage and processing speed by utilizing 512-dimensional facial embeddings instead of storing raw images, ensuring the system remains lightweight and responsive.
 
 ---
 
@@ -143,7 +136,7 @@ The trained classifier can be used by the recognition script for faster/robust p
 Run recognition against a webcam or a video file and log attendance:
 
 python scripts/recognize.py --encodings data/encodings.pickle --output data/attendance.csv
-# For a video file:
+## For a video file:
 python scripts/recognize.py --encodings data/encodings.pickle --video demo/video1.mp4 --output data/attendance.csv
 
 Typical behavior:
